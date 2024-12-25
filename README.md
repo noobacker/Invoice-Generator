@@ -19,24 +19,6 @@ A clean, professional, and user-friendly invoice generator web application devel
 - JavaScript
 - html2pdf.js for PDF generation
 
-## Usage
-
-1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/invoice-generator.git
-```
-
-2. Open `index.html` in your web browser
-
-3. Fill in your details:
-   - Business information
-   - Client details
-   - Invoice items
-   - Tax rate
-
-4. Add items using the "Add Row" button
-
-5. Download the PDF using the "Download PDF" button
 
 ## Features in Detail
 
@@ -72,12 +54,6 @@ You can customize the following:
 - Invoice styling (through CSS)
 - PDF export settings
 
-## Development
-
-To modify the code:
-1. Update the HTML structure in `index.html`
-2. Modify styles in the `<style>` section
-3. Enhance functionality in the `<script>` section
 
 ## License
 
@@ -97,4 +73,4 @@ Developed by: **Harshal Pimpalshende**
 
 ## Support
 
-For support, please open an issue in the GitHub repository.
+For support, please star this GitHub repository and checkout other projects.
