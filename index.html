@@ -1,0 +1,625 @@
+<!--
+Invoice Generator
+Developed by: Harshal Pimpalshende
+Purpose: Generate professional invoices with automatic calculations and PDF export 
+GITHUB REPO : https://github.com/noobacker/Invoice-Generator -->
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Invoice Generator - Noobacker Enterprises</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+      /* Reset and Base Styles */
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f9f9f9;
+        font-size: 14px;
+      }
+
+      /* Invoice Container */
+      .invoice {
+        max-width: 800px;
+        margin: 20px auto;
+        background: #fff;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+      }
+
+      /* Header Styles */
+      .invoice-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+      }
+
+      .invoice-header h1 {
+        font-size: 24px;
+        margin: 0 0 10px 0;
+      }
+
+      .left-header {
+        flex: 1;
+        min-width: 250px;
+      }
+
+      .right-header {
+        text-align: right;
+        min-width: 250px;
+      }
+
+      .right-header strong {
+        display: block;
+        font-size: 24px;
+      }
+
+      /* Invoice Info */
+      .invoice-info {
+        margin-top: 5px;
+        line-height: 1.8;
+      }
+
+      /* Tables */
+      .details,
+      .items,
+      .totals {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+        page-break-inside: auto;
+      }
+
+      .items tr {
+        page-break-inside: avoid;
+        page-break-after: auto;
+      }
+
+      .items thead {
+        display: table-header-group;
+      }
+
+      .items tbody {
+        page-break-inside: avoid;
+      }
+
+      .details th,
+      .items th,
+      .totals th,
+      .details td,
+      .items td,
+      .totals td {
+        border: 1px solid #ddd;
+        padding: 10px;
+        text-align: left;
+      }
+
+      .items th {
+        background-color: #f2f2f2;
+      }
+
+      .totals td {
+        text-align: right;
+      }
+
+      .totals tr:last-child td {
+        font-weight: bold;
+      }
+
+      /* Form Controls */
+      .editable {
+        border: none;
+        padding: 2px;
+        width: 100%;
+        font-family: inherit;
+        font-size: inherit;
+      }
+
+      .description-input {
+        min-width: 200px;
+        width: 100%;
+      }
+
+      .editable:focus {
+        outline: 1px solid #007bff;
+        background: #f8f9fa;
+      }
+
+      .number-input {
+        text-align: right;
+        width: 100px;
+      }
+
+      /* Controls Section */
+      .controls {
+        max-width: 800px;
+        margin: 20px auto;
+        text-align: right;
+      }
+
+      .btn {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin-left: 10px;
+      }
+
+      .btn:hover {
+        background: #0056b3;
+      }
+
+      /* Footer */
+      .footer {
+        text-align: center;
+        font-size: 13px;
+        font-weight: bold;
+        color: #333;
+        margin-top: 20px;
+        page-break-inside: avoid;
+      }
+
+      /* Print Styles */
+      @media print {
+        body {
+          background: white;
+        }
+
+        .invoice {
+          margin: 0;
+          padding: 15mm;
+          border: none;
+        }
+
+        .controls {
+          display: none;
+        }
+
+        .items thead {
+          display: table-header-group;
+        }
+
+        /* Ensure the table starts from the first page and continues to the next if needed */
+        .items {
+          page-break-before: always; /* Ensures the table starts on a new page if it overflows */
+          page-break-inside: avoid;
+        }
+
+        /* Prevent page breaks inside rows */
+        .items tr {
+          page-break-inside: avoid;
+        }
+
+        /* Page margin and size */
+        @page {
+          margin: 12mm;
+          size: A4;
+        }
+      }
+
+      /* Responsive Design */
+      @media screen and (max-width: 768px) {
+        .invoice {
+          margin: 10px;
+          padding: 15px;
+        }
+
+        .invoice-header {
+          flex-direction: column;
+        }
+
+        .right-header {
+          text-align: left;
+          margin-top: 20px;
+        }
+
+        .number-input {
+          width: 80px;
+        }
+
+        .details th,
+        .items th,
+        .totals th,
+        .details td,
+        .items td,
+        .totals td {
+          padding: 5px;
+        }
+      }
+
+      @media screen and (max-width: 480px) {
+        .btn {
+          display: block;
+          margin: 10px 0;
+          width: 100%;
+        }
+
+        .items {
+          font-size: 12px;
+        }
+
+        .number-input {
+          width: 60px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="controls">
+      <button class="btn" onclick="addRow()">Add Row</button>
+      <button class="btn" onclick="generatePDF()">Download PDF</button>
+    </div>
+
+    <div class="invoice" id="invoice">
+      <div class="invoice-header">
+        <div class="left-header">
+          <h1>Invoice</h1>
+          <div
+            class="invoice-info"
+            style="display: flex; flex-direction: column; gap: 10px"
+          >
+            <!-- Invoice Number -->
+            <div style="display: flex; align-items: center; gap: 10px">
+              <label for="invoiceNumber" style="flex-shrink: 0; width: 100px"
+                >Invoice #:</label
+              >
+              <textarea
+                class="editable"
+                id="invoiceNumber"
+                style="
+                  width: 200px;
+                  text-align: left;
+                  resize: none;
+                  overflow-y: hidden;
+                "
+                placeholder="NBRK-20241225-001"
+                rows="1"
+              ></textarea>
+            </div>
+
+            <!-- Date -->
+            <div style="display: flex; align-items: center; gap: 10px">
+              <label for="invoiceDate" style="flex-shrink: 0; width: 100px"
+                >Date:</label
+              >
+              <input
+                type="date"
+                class="editable"
+                id="invoiceDate"
+                style="width: 150px; text-align: right"
+              />
+            </div>
+          </div>
+        </div>
+        <div class="right-header">
+          <strong>Noobacker Enterprises</strong><br />
+          <div
+            class="c-info"
+            style="display: flex; flex-direction: column; gap: 10px"
+          >
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+              "
+            >
+              <label for="address" style="flex: 1">Address:</label>
+              <textarea
+                class="editable"
+                id="address"
+                style="
+                  width: 150px;
+                  text-align: right;
+                  resize: none;
+                  overflow-y: hidden;
+                  flex: 2;
+                "
+                placeholder="INDIA"
+                rows="1"
+                oninput="adjustHeight(this)"
+              ></textarea>
+            </div>
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+              "
+            >
+              <label for="phone" style="flex: 1">Phone no.:</label>
+              <textarea
+                class="editable"
+                id="phone"
+                style="
+                  width: 150px;
+                  text-align: right;
+                  resize: none;
+                  overflow-y: hidden;
+                  flex: 2;
+                "
+                placeholder="+91 9**** ****2"
+                rows="1"
+                oninput="adjustHeight(this)"
+              ></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-bottom: 10px" class="bill">
+        <span style="font-weight: bold">Billing Details (Client) :</span>
+      </div>
+
+      <table class="details">
+        <tr>
+          <th>
+            Business Name: <br /><br />
+            Contact Person: <br /><br />
+            Contact Number: <br /><br />
+            Address:
+          </th>
+          <td>
+            <input
+              type="text"
+              class="editable"
+              placeholder="Business Name"
+            /><br /><br />
+            <input
+              type="text"
+              class="editable"
+              placeholder="Client Name"
+            /><br /><br />
+            <input
+              type="text"
+              class="editable"
+              placeholder="Client Contact Info"
+            /><br /><br />
+            <input type="text" class="editable" placeholder="Client Address" />
+          </td>
+        </tr>
+      </table>
+
+      <table class="items" id="itemsTable">
+        <thead>
+          <tr>
+            <th style="width: 40%">Description</th>
+            <th>Quantity</th>
+            <th>Unit Price (₹)</th>
+            <th>Total (₹)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <input
+                type="text"
+                class="editable description-input"
+                value="Website Design"
+              />
+            </td>
+            <td>
+              <input
+                type="number"
+                class="editable number-input"
+                value="1"
+                onchange="updateRow(this)"
+              />
+            </td>
+            <td>
+              <input
+                type="number"
+                class="editable number-input"
+                value="10000"
+                onchange="updateRow(this)"
+              />
+            </td>
+            <td>
+              <input
+                type="number"
+                class="editable number-input"
+                value="10000"
+                readonly
+              />
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <table class="totals">
+        <tr>
+          <td>Subtotal (₹):</td>
+          <td>
+            <input
+              type="number"
+              id="subtotal"
+              class="editable number-input"
+              value="10000"
+              readonly
+            />
+          </td>
+        </tr>
+        <tr>
+          <td>Tax Rate (%):</td>
+          <td>
+            <input
+              type="number"
+              id="taxRate"
+              class="editable number-input"
+              value="10"
+              onchange="updateTotals()"
+            />
+          </td>
+        </tr>
+        <tr>
+          <td>Tax Amount (₹):</td>
+          <td>
+            <input
+              type="number"
+              id="tax"
+              class="editable number-input"
+              value="1000"
+              readonly
+            />
+          </td>
+        </tr>
+        <tr>
+          <td>Total Due (₹):</td>
+          <td>
+            <input
+              type="number"
+              id="total"
+              class="editable number-input"
+              value="11000"
+              readonly
+            />
+          </td>
+        </tr>
+      </table>
+
+      <p class="footer">
+        Thank you for choosing Noobacker Enterprises.<br />
+        We're honored to support the growth and success of your business!
+      </p>
+    </div>
+
+    <script>
+      // Reset height to auto when typing in textarea
+      document.querySelectorAll("textarea").forEach((textarea) => {
+        textarea.addEventListener("input", (event) => {
+          const target = event.target;
+          target.style.height = "auto"; // Reset height to auto
+          target.style.height = target.scrollHeight + "px"; // Adjust height based on scrollHeight
+        });
+      });
+      // Function to get the current date in "yyyymmdd" format
+      function getCurrentDate() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, "0");
+        const day = String(now.getDate()).padStart(2, "0");
+        return `${year}${month}${day}`;
+      }
+
+      // Set the default value for the invoice number
+      const inputField = document.getElementById("customInput");
+      const prefix = "NBRK-";
+      const suffix = "-001";
+      inputField.value = `${prefix}${getCurrentDate()}${suffix}`;
+
+      // Set default dates
+      window.onload = function () {
+        const today = new Date();
+        const dueDate = new Date(today);
+        dueDate.setDate(dueDate.getDate() + 15);
+
+        document.querySelectorAll('input[type="date"]')[0].value = today
+          .toISOString()
+          .split("T")[0];
+        document.querySelectorAll('input[type="date"]')[1].value = dueDate
+          .toISOString()
+          .split("T")[0];
+      };
+
+      // Add new row to items table
+      function addRow() {
+        const tbody = document.querySelector("#itemsTable tbody");
+        const newRow = document.createElement("tr");
+        newRow.innerHTML = `
+                <td><input type="text" class="editable description-input" value=""></td>
+                <td><input type="number" class="editable number-input" value="1" onchange="updateRow(this)"></td>
+                <td><input type="number" class="editable number-input" value="0" onchange="updateRow(this)"></td>
+                <td><input type="number" class="editable number-input" value="0" readonly></td>
+            `;
+        tbody.appendChild(newRow);
+      }
+
+      // Update row calculations
+      function updateRow(input) {
+        const row = input.closest("tr");
+        const quantity =
+          parseFloat(row.cells[1].querySelector("input").value) || 0;
+        const unitPrice =
+          parseFloat(row.cells[2].querySelector("input").value) || 0;
+        const total = quantity * unitPrice;
+        row.cells[3].querySelector("input").value = total.toFixed(2);
+        updateTotals();
+      }
+
+      // Update total calculations
+      function updateTotals() {
+        let subtotal = 0;
+        document.querySelectorAll("#itemsTable tbody tr").forEach((row) => {
+          subtotal +=
+            parseFloat(row.cells[3].querySelector("input").value) || 0;
+        });
+
+        const taxRate =
+          parseFloat(document.getElementById("taxRate").value) || 0;
+        const tax = subtotal * (taxRate / 100);
+        const total = subtotal + tax;
+
+        document.getElementById("subtotal").value = subtotal.toFixed(2);
+        document.getElementById("tax").value = tax.toFixed(2);
+        document.getElementById("total").value = total.toFixed(2);
+      }
+
+      // Generate and download PDF
+      function generatePDF() {
+        const invoice = document.getElementById("invoice");
+        const businessName =
+          document.querySelector('.details input[placeholder="Business Name"]')
+            .value || "Invoice";
+        const currentDate = new Date().toISOString().split("T")[0];
+
+        const opt = {
+          margin: [7, 7, 7, 7],
+          filename: `${businessName}-${currentDate}.pdf`,
+          image: { type: "jpeg", quality: 0.98 },
+          html2canvas: {
+            scale: 2,
+            logging: true,
+            dpi: 192,
+            letterRendering: true,
+          },
+          jsPDF: {
+            unit: "mm",
+            format: "a4",
+            orientation: "portrait",
+          },
+        };
+
+        html2pdf().from(invoice).set(opt).save();
+      }
+
+      // Adjust textarea height based on content
+      function adjustHeight(el) {
+        el.style.height = "auto";
+        el.style.height = el.scrollHeight + "px";
+      }
+      //        Invoice Generator
+      //        Developed by: Harshal Pimpalshende
+      //        Purpose: Generate professional invoices with automatic calculations and PDF export
+
+      // Set default date on page load
+      window.onload = function () {
+        const today = new Date();
+        document.querySelector('input[type="date"]').value = today
+          .toISOString()
+          .split("T")[0];
+      };
+    </script>
+  </body>
+</html>
