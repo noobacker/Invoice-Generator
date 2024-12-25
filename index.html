@@ -559,8 +559,9 @@
         const table = document
           .getElementById("itemsTable")
           .getElementsByTagName("tbody")[0];
-        const newRow = table.insertRow();
         const rowCount = table.rows.length;
+        const newRow = table.insertRow();
+        console.log(table.rows);
 
         // Create new cells and append them to the row
         newRow.innerHTML = `
