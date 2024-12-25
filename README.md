@@ -54,7 +54,7 @@ You can customize the following:
 - Invoice styling (through CSS)
 - PDF export settings
 
-## Customization
+## Usage
 
 - https://noobacker-invoice-generator.vercel.app
 
